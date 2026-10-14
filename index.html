@@ -1,0 +1,993 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kawa — Traiteurs près de chez toi</title>
+<meta name="description" content="Trouve un traiteur local, discute avec lui et commande pour ton événement.">
+<meta name="theme-color" content="#C2410C">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F7F6F2;
+    --card: #FFFFFF;
+    --ink: #18181B;
+    --muted: #5B5B63;
+    --line: #E4E1D8;
+    --line-soft: #F0EDE6;
+    --accent: #C2410C;
+    --accent-dark: #9A3412;
+    --accent-soft: #FDEBD8;
+    --accent-ink: #431407;
+    --good: #14532D;
+    --good-soft: #DCFCE7;
+    --warn: #854D0E;
+    --warn-soft: #FEF3C7;
+    --bad: #991B1B;
+    --bad-soft: #FEE2E2;
+    --photo: #E9DFCF;
+    --display: 'Bricolage Grotesque', system-ui, sans-serif;
+    --body: 'Figtree', system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; -webkit-text-size-adjust: 100%; }
+  a { color: var(--accent); }
+  a:hover { color: var(--accent-dark); }
+  button, input, select, textarea { font: inherit; color: inherit; }
+  h1, h2, h3 { font-family: var(--display); margin: 0; line-height: 1.15; }
+  h1 { font-size: 28px; }
+  h2 { font-size: 20px; }
+  h3 { font-size: 17px; }
+  p { margin: 0; line-height: 1.5; }
+
+  .app { max-width: 560px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+  header.top { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; position: sticky; top: 0; background: var(--bg); z-index: 5; }
+  .logo { font-family: var(--display); font-weight: 700; font-size: 24px; color: var(--accent); text-decoration: none; }
+  main { flex: 1; padding: 4px 16px 110px; display: flex; flex-direction: column; gap: 16px; }
+
+  nav.bottom { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card); border-top: 1px solid var(--line); z-index: 10; padding-bottom: env(safe-area-inset-bottom); }
+  nav.bottom .inner { max-width: 560px; margin: 0 auto; display: flex; }
+  nav.bottom a { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 0 10px; min-height: 56px; text-decoration: none; color: var(--muted); font-size: 12px; font-weight: 500; }
+  nav.bottom a.on { color: var(--accent); font-weight: 700; }
+  nav.bottom svg { width: 22px; height: 22px; }
+
+  .card { background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .stack { display: flex; flex-direction: column; gap: 12px; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .between { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .muted { color: var(--muted); font-size: 14px; }
+  .small { font-size: 13px; }
+  .grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; padding: 0 18px; border-radius: 14px; border: 1.5px solid var(--ink); background: var(--card); font-weight: 600; font-size: 15px; cursor: pointer; text-decoration: none; color: var(--ink); }
+  .btn:hover { background: var(--line-soft); color: var(--ink); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #FFFFFF; }
+  .btn.primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); color: #FFFFFF; }
+  .btn.ghost { border-color: var(--line); }
+  .btn.danger { border-color: var(--bad-soft); color: var(--bad); }
+  .btn.block { width: 100%; }
+  .btn.sm { min-height: 40px; padding: 0 12px; font-size: 14px; border-radius: 12px; }
+  .btn:disabled { opacity: .55; cursor: default; }
+  .linkbtn { background: none; border: none; padding: 8px 0; color: var(--accent); font-weight: 600; cursor: pointer; text-decoration: underline; min-height: 44px; }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-label { font-size: 14px; font-weight: 600; }
+  .hint { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  input[type=text], input[type=email], input[type=password], input[type=number], input[type=date], input[type=time], input[type=url], input[type=search], select, textarea {
+    width: 100%; min-height: 48px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); padding: 10px 14px; font-size: 16px;
+  }
+  textarea { min-height: 96px; resize: vertical; line-height: 1.45; }
+  input:focus, select:focus, textarea:focus, .btn:focus-visible, a:focus-visible { outline: 3px solid #FDBA74; outline-offset: 1px; }
+
+  .search { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 0 14px; }
+  .search input { border: none; padding: 0; min-height: 50px; background: none; }
+  .search input:focus { outline: none; }
+  .search:focus-within { outline: 3px solid #FDBA74; }
+  .chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chip { flex-shrink: 0; min-height: 40px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); font-size: 14px; font-weight: 500; cursor: pointer; }
+  .chip.on { background: var(--ink); color: #FFFFFF; border-color: var(--ink); font-weight: 600; }
+
+  .tcard { background: var(--card); border: 1px solid var(--line-soft); border-radius: 18px; overflow: hidden; text-decoration: none; color: var(--ink); display: flex; flex-direction: column; }
+  .tcard:hover { color: var(--ink); border-color: var(--line); }
+  .photo { background: var(--photo); display: flex; align-items: center; justify-content: center; color: #6B5E4B; font-family: var(--display); font-weight: 700; font-size: 34px; overflow: hidden; }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tcard .photo { height: 140px; }
+  .tcard .body { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; }
+  .cover { height: 200px; border-radius: 18px; }
+
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+  .b-attente { background: var(--warn-soft); color: var(--warn); }
+  .b-ok { background: var(--good-soft); color: var(--good); }
+  .b-no { background: var(--bad-soft); color: var(--bad); }
+  .b-neutre { background: var(--line-soft); color: var(--muted); }
+
+  .menu-item { display: flex; flex-direction: column; gap: 6px; padding: 14px; border: 1px solid var(--line-soft); border-radius: 16px; background: var(--card); }
+  .price { font-family: var(--display); font-weight: 700; font-size: 18px; white-space: nowrap; }
+
+  .note { background: var(--accent-soft); color: var(--accent-ink); border-radius: 14px; padding: 12px 14px; font-size: 14px; line-height: 1.45; }
+  .note.good { background: var(--good-soft); color: var(--good); }
+  .note.warn { background: var(--warn-soft); color: var(--warn); }
+  .note.bad { background: var(--bad-soft); color: var(--bad); }
+
+  .msgs { display: flex; flex-direction: column; gap: 8px; max-height: 50vh; overflow-y: auto; padding: 4px 2px; }
+  .bubble { max-width: 82%; padding: 10px 14px; border-radius: 18px; font-size: 15px; line-height: 1.4; white-space: pre-wrap; word-wrap: break-word; }
+  .bubble.me { align-self: flex-end; background: var(--accent); color: #FFFFFF; border-bottom-right-radius: 4px; }
+  .bubble.them { align-self: flex-start; background: var(--bg); border: 1px solid var(--line); border-bottom-left-radius: 4px; }
+  .bubble .who { display: block; font-size: 11px; font-weight: 700; opacity: .85; margin-bottom: 2px; }
+  .sendrow { display: flex; gap: 8px; align-items: flex-end; }
+  .sendrow textarea { min-height: 48px; height: 48px; }
+
+  .role-pick { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .role-pick label { border: 1.5px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 4px; cursor: pointer; background: var(--card); }
+  .role-pick label:has(input:checked) { border-color: var(--accent); background: var(--accent-soft); }
+  .role-pick input { position: absolute; opacity: 0; }
+
+  dialog { border: none; border-radius: 22px; padding: 0; width: min(520px, calc(100vw - 24px)); max-height: calc(100vh - 32px); background: var(--bg); color: var(--ink); }
+  dialog::backdrop { background: rgba(24, 24, 27, .5); }
+  dialog form { padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--ink); color: #FFFFFF; padding: 12px 18px; border-radius: 14px; font-size: 14px; z-index: 50; max-width: calc(100vw - 32px); box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .empty { text-align: center; padding: 32px 16px; color: var(--muted); }
+  .spinner { padding: 40px; text-align: center; color: var(--muted); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .stat { font-family: var(--display); font-weight: 700; font-size: 24px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <a class="logo" href="#/">Kawa</a>
+    <span id="hello" class="muted"></span>
+  </header>
+  <main id="main"><div class="spinner">Chargement…</div></main>
+</div>
+<nav class="bottom" id="nav" aria-label="Navigation principale"><div class="inner"></div></nav>
+
+<script type="module">
+// =====================================================================
+// 1) CONFIGURATION — remplace ces deux valeurs (voir le guide, étape 3)
+//    Supabase > Connect (ou Settings > API Keys) : Project URL + Publishable key
+// =====================================================================
+const SUPABASE_URL = 'https://mbonbsvurzxilhuymnyj.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_gVj420_gKrEjhAvX2jSVDA_EWW1dsJ3';
+// =====================================================================
+
+import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const main = document.getElementById('main');
+const configured = SUPABASE_URL.startsWith('https://') && !SUPABASE_ANON_KEY.startsWith('COLLE');
+const sb = configured ? createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { auth: { flowType: 'implicit', detectSessionInUrl: true, persistSession: true } }) : null;
+const BASE_URL = location.origin + location.pathname;
+
+const state = { session: null, profile: null, traiteur: null, settings: null };
+let cleanup = [];
+
+// ---------- petits outils ----------
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  let value;
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'value') value = v;
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const kid of kids.flat(Infinity)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid instanceof Node ? kid : String(kid));
+  }
+  if (value !== undefined) el.value = value;
+  return el;
+}
+const field = (label, input, hint) =>
+  h('label', { class: 'field' }, h('span', { class: 'field-label' }, label), input, hint ? h('span', { class: 'hint' }, hint) : null);
+const euro = n => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR', maximumFractionDigits: Number(n) % 1 ? 2 : 0 }).format(Number(n) || 0);
+const dateFr = d => d ? new Date(d.length === 10 ? d + 'T12:00:00' : d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' }) : '';
+const dateCourte = d => new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+const isoDay = d => { const x = new Date(d); x.setMinutes(x.getMinutes() - x.getTimezoneOffset()); return x.toISOString().slice(0, 10); };
+const go = hash => { if (location.hash === hash) render(); else location.hash = hash; };
+const initiales = s => (s || '?').trim().split(/\s+/).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const photoOk = url => typeof url === 'string' && configured && url.startsWith(SUPABASE_URL + '/storage/');
+
+function toast(msg) {
+  const t = h('div', { class: 'toast', role: 'status' }, msg);
+  document.body.append(t);
+  setTimeout(() => t.remove(), 3800);
+}
+function fail(error, fallback = 'Une erreur est survenue. Réessaie.') {
+  console.error(error);
+  const m = error && error.message ? error.message : '';
+  const fr = {
+    'Invalid login credentials': 'Email ou mot de passe incorrect.',
+    'Email not confirmed': 'Confirme d’abord ton email (regarde ta boîte mail).',
+    'User already registered': 'Un compte existe déjà avec cet email.',
+    'Password should be at least 6 characters.': 'Le mot de passe doit faire au moins 6 caractères.',
+  };
+  if (fr[m]) return toast(fr[m]);
+  if (error && error.code === 'P0001' && m) return toast(m); // messages écrits dans la base (en français)
+  if (/rate limit/i.test(m)) return toast('Trop de tentatives. Patiente quelques minutes.');
+  toast(fallback);
+}
+function busy(btn, on, label) {
+  if (!btn) return;
+  if (on) { btn.dataset.label = btn.textContent; btn.textContent = label || 'Un instant…'; btn.disabled = true; }
+  else { btn.textContent = btn.dataset.label || btn.textContent; btn.disabled = false; }
+}
+function photoBox(url, nom, cls) {
+  const box = h('div', { class: 'photo ' + (cls || '') });
+  if (photoOk(url)) box.append(h('img', { src: url, alt: '', loading: 'lazy' }));
+  else box.append(h('span', { 'aria-hidden': 'true' }, initiales(nom)));
+  return box;
+}
+
+// ---------- abonnement ----------
+function abonnement(t) {
+  const now = Date.now();
+  const essai = new Date(t.essai_fin).getTime();
+  const paye = t.abonnement_fin ? new Date(t.abonnement_fin).getTime() : 0;
+  if (paye > now) return { actif: true, type: 'paye', fin: t.abonnement_fin, texte: 'Abonnement payé jusqu’au ' + dateCourte(t.abonnement_fin) };
+  if (essai > now) return { actif: true, type: 'essai', fin: t.essai_fin, texte: 'Essai gratuit jusqu’au ' + dateCourte(t.essai_fin) };
+  return { actif: false, type: 'expire', fin: null, texte: 'Abonnement expiré' };
+}
+const visible = t => t.approuve && abonnement(t).actif;
+
+const STATUTS = {
+  en_attente: ['En attente', 'b-attente'],
+  acceptee: ['Acceptée', 'b-ok'],
+  refusee: ['Refusée', 'b-no'],
+  terminee: ['Terminée', 'b-neutre'],
+  annulee: ['Annulée', 'b-no'],
+};
+const badge = s => h('span', { class: 'badge ' + (STATUTS[s] || ['', 'b-neutre'])[1] }, (STATUTS[s] || [s])[0]);
+
+// ---------- icônes ----------
+const ICONS = {
+  home: 'M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z',
+  bag: 'M6 7h12l-1 13H7zM9 7a3 3 0 0 1 6 0',
+  pro: 'M4 7h16v12H4zM9 7V5h6v2',
+  user: 'M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0',
+  search: 'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM20 20l-3.5-3.5',
+  back: 'M15 6l-6 6 6 6',
+};
+function icon(name, size = 22) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24'); svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('fill', 'none'); svg.setAttribute('stroke', 'currentColor'); svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round'); svg.setAttribute('stroke-linejoin', 'round'); svg.setAttribute('aria-hidden', 'true');
+  const p = document.createElementNS('http://www.w3.org/2000/svg', 'path'); p.setAttribute('d', ICONS[name]); svg.append(p);
+  return svg;
+}
+const backLink = (href, label = 'Retour') => h('a', { href, class: 'row', style: 'text-decoration:none;color:var(--ink);font-weight:600;min-height:44px' }, icon('back', 20), label);
+
+// ---------- session ----------
+async function loadUser() {
+  state.profile = null; state.traiteur = null;
+  if (!state.session) return;
+  const uid = state.session.user.id;
+  const { data: p } = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
+  state.profile = p;
+  if (p && p.role === 'traiteur') {
+    const { data: t } = await sb.from('traiteurs').select('*').eq('id', uid).maybeSingle();
+    state.traiteur = t;
+  }
+}
+async function loadSettings() {
+  const { data } = await sb.from('settings').select('*').eq('id', 1).maybeSingle();
+  state.settings = data || { stripe_lien: '', prix_mensuel: 20, jours_essai: 30 };
+}
+function needLogin() {
+  return h('div', { class: 'card' },
+    h('h2', null, 'Connecte-toi'),
+    h('p', { class: 'muted' }, 'Tu dois être connecté pour voir cette page.'),
+    h('a', { class: 'btn primary', href: '#/connexion?r=' + encodeURIComponent(location.hash) }, 'Se connecter'),
+    h('a', { class: 'btn ghost', href: '#/inscription' }, 'Créer un compte'));
+}
+
+// ---------- navigation ----------
+function drawNav(route) {
+  const inner = document.querySelector('#nav .inner');
+  inner.replaceChildren();
+  const items = [['#/', 'home', 'Accueil', ['', 't']], ['#/commandes', 'bag', 'Commandes', ['commandes', 'commande']]];
+  if (state.profile && state.profile.role === 'traiteur') items.push(['#/pro', 'pro', 'Espace pro', ['pro']]);
+  items.push(['#/compte', 'user', state.session ? 'Compte' : 'Connexion', ['compte', 'connexion', 'inscription', 'admin', 'mdp']]);
+  for (const [href, ic, label, keys] of items) {
+    const on = keys.includes(route);
+    inner.append(h('a', { href, class: on ? 'on' : '', 'aria-current': on ? 'page' : null }, icon(ic), label));
+  }
+  document.getElementById('hello').textContent = state.profile ? 'Bonjour ' + state.profile.nom.split(' ')[0] : '';
+}
+
+async function render() {
+  cleanup.forEach(fn => { try { fn(); } catch (e) {} });
+  cleanup = [];
+  const raw = location.hash.replace(/^#\/?/, '');
+  const [path, query] = raw.split('?');
+  const parts = path.split('/');
+  const params = new URLSearchParams(query || '');
+  const route = parts[0] || '';
+  drawNav(route);
+  main.replaceChildren(h('div', { class: 'spinner' }, 'Chargement…'));
+  let page;
+  try {
+    switch (route) {
+      case '': page = await pageCatalogue(); break;
+      case 't': page = await pageTraiteur(parts[1]); break;
+      case 'connexion': page = pageConnexion(params.get('r')); break;
+      case 'inscription': page = pageInscription(params.get('role')); break;
+      case 'mdp': page = pageNouveauMdp(); break;
+      case 'commandes': page = await pageCommandes(); break;
+      case 'commande': page = await pageCommande(parts[1]); break;
+      case 'pro': page = await pagePro(); break;
+      case 'admin': page = await pageAdmin(); break;
+      case 'compte': page = await pageCompte(); break;
+      default: page = h('div', { class: 'empty' }, 'Page introuvable. ', h('a', { href: '#/' }, 'Retour à l’accueil'));
+    }
+  } catch (e) {
+    console.error(e);
+    page = h('div', { class: 'card' }, h('h2', null, 'Oups'), h('p', { class: 'muted' }, 'Impossible de charger cette page. Vérifie ta connexion et réessaie.'),
+      h('button', { class: 'btn ghost', onclick: () => render() }, 'Réessayer'));
+  }
+  main.replaceChildren(page);
+  window.scrollTo(0, 0);
+}
+
+// =====================================================================
+// PAGE : CATALOGUE
+// =====================================================================
+async function pageCatalogue() {
+  const [tRes, mRes] = await Promise.all([
+    sb.from('traiteurs').select('id,nom,cuisine,ville,description,photo_url,delai_jours,approuve,essai_fin,abonnement_fin'),
+    sb.from('menus').select('traiteur_id,prix_personne,min_convives').eq('actif', true),
+  ]);
+  if (tRes.error) throw tRes.error;
+  const prix = {};
+  for (const m of mRes.data || []) {
+    const p = Number(m.prix_personne);
+    if (prix[m.traiteur_id] == null || p < prix[m.traiteur_id].p) prix[m.traiteur_id] = { p, min: m.min_convives };
+  }
+  const traiteurs = (tRes.data || []).filter(t => visible(t) && prix[t.id]);
+  const cuisines = [...new Set(traiteurs.map(t => t.cuisine.trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'));
+
+  let filtre = '', texte = '';
+  const list = h('div', { class: 'stack' });
+  const count = h('div', { style: 'font-weight:600' });
+  const chips = h('div', { class: 'chips', role: 'group', 'aria-label': 'Type de cuisine' });
+
+  function drawChips() {
+    chips.replaceChildren(...['', ...cuisines].map(c =>
+      h('button', { class: 'chip' + (filtre === c ? ' on' : ''), 'aria-pressed': filtre === c ? 'true' : 'false', onclick: () => { filtre = c; drawChips(); drawList(); } }, c || 'Tout')));
+  }
+  function drawList() {
+    const q = texte.trim().toLowerCase();
+    const shown = traiteurs.filter(t =>
+      (!filtre || t.cuisine.trim() === filtre) &&
+      (!q || [t.nom, t.cuisine, t.ville, t.description].join(' ').toLowerCase().includes(q)));
+    count.textContent = shown.length + (shown.length > 1 ? ' traiteurs disponibles' : ' traiteur disponible');
+    if (!traiteurs.length) {
+      list.replaceChildren(h('div', { class: 'card' },
+        h('h3', null, 'Les premiers traiteurs arrivent bientôt'),
+        h('p', { class: 'muted' }, 'Tu es traiteur ? Inscris-toi : le premier mois est gratuit.'),
+        h('a', { class: 'btn primary', href: '#/inscription?role=traiteur' }, 'Inscrire mon activité')));
+      return;
+    }
+    list.replaceChildren(...(shown.length ? shown.map(t =>
+      h('a', { class: 'tcard', href: '#/t/' + t.id },
+        photoBox(t.photo_url, t.nom),
+        h('div', { class: 'body' },
+          h('h3', null, t.nom),
+          h('div', { class: 'muted' }, [t.cuisine, t.ville].filter(Boolean).join(' · ') || 'Traiteur'),
+          h('div', null, h('b', null, 'dès ' + euro(prix[t.id].p)), '/pers. · commander ' + t.delai_jours + ' j avant'))))
+      : [h('div', { class: 'empty' }, 'Aucun traiteur ne correspond à ta recherche.')]));
+  }
+  drawChips(); drawList();
+
+  return h('div', { class: 'stack', style: 'gap:16px' },
+    h('h1', null, 'Quel événement prépares-tu ?'),
+    h('p', { class: 'muted' }, 'Choisis un traiteur, discute avec lui et commande. Tu le paies directement.'),
+    h('label', { class: 'search' }, icon('search', 18), h('span', { class: 'sr' }, 'Rechercher'),
+      h('input', { type: 'search', placeholder: 'Traiteur, plat, ville…', oninput: e => { texte = e.target.value; drawList(); } })),
+    cuisines.length > 1 ? chips : null,
+    traiteurs.length ? count : null,
+    list);
+}
+
+// =====================================================================
+// PAGE : FICHE TRAITEUR + COMMANDE
+// =====================================================================
+async function pageTraiteur(id) {
+  const [{ data: t, error }, { data: menus }] = await Promise.all([
+    sb.from('traiteurs').select('*').eq('id', id).maybeSingle(),
+    sb.from('menus').select('*').eq('traiteur_id', id).eq('actif', true).order('prix_personne'),
+  ]);
+  if (error) throw error;
+  if (!t) return h('div', { class: 'stack' }, backLink('#/'), h('div', { class: 'card' }, h('h2', null, 'Traiteur indisponible'), h('p', { class: 'muted' }, 'Ce traiteur ne prend pas de commandes pour le moment.')));
+
+  const estMoi = state.session && state.session.user.id === t.id;
+  const dlg = h('dialog', { 'aria-label': 'Commander' });
+  cleanup.push(() => dlg.remove());
+  document.body.append(dlg);
+
+  function ouvrirCommande(m) {
+    if (!state.session) { go('#/connexion?r=' + encodeURIComponent('#/t/' + t.id)); return; }
+    const minDate = new Date(); minDate.setDate(minDate.getDate() + (t.delai_jours || 0));
+    const conv = h('input', { type: 'number', min: m.min_convives, max: 2000, step: 1, required: true, value: m.min_convives, inputmode: 'numeric' });
+    const total = h('div', { class: 'price' });
+    const majTotal = () => { total.textContent = 'Total estimé : ' + euro((Number(conv.value) || 0) * Number(m.prix_personne)); };
+    conv.addEventListener('input', majTotal); majTotal();
+    const date = h('input', { type: 'date', required: true, min: isoDay(minDate) });
+    const heure = h('input', { type: 'time', value: '19:00' });
+    const adresse = h('input', { type: 'text', required: true, autocomplete: 'street-address', placeholder: 'Adresse de l’événement' });
+    const note = h('textarea', { placeholder: 'Ex. : sans poisson, 5 enfants, livraison par l’escalier B…', maxlength: 2000 });
+    const submit = h('button', { class: 'btn primary block', type: 'submit' }, 'Envoyer ma demande');
+    const form = h('form', {
+      onsubmit: async e => {
+        e.preventDefault();
+        busy(submit, true, 'Envoi…');
+        const { data, error } = await sb.from('commandes').insert({
+          menu_id: m.id, traiteur_id: t.id, client_id: state.session.user.id,
+          convives: Number(conv.value), date_evenement: date.value, heure: heure.value, adresse: adresse.value.trim(), note: note.value.trim(),
+        }).select('id').single();
+        busy(submit, false);
+        if (error) return fail(error);
+        dlg.close();
+        toast('Demande envoyée ! Le traiteur va te répondre.');
+        go('#/commande/' + data.id);
+      },
+    },
+      h('div', { class: 'between' }, h('h2', null, m.nom), h('button', { type: 'button', class: 'btn ghost sm', onclick: () => dlg.close() }, 'Fermer')),
+      h('p', { class: 'muted' }, euro(m.prix_personne) + ' par personne · minimum ' + m.min_convives + ' personnes'),
+      field('Nombre de convives', conv),
+      h('div', { class: 'grid2' }, field('Date', date), field('Heure', heure)),
+      field('Adresse', adresse),
+      field('Message au traiteur (facultatif)', note),
+      total,
+      h('div', { class: 'note' }, 'C’est une demande : le traiteur doit l’accepter. Tu le paies ensuite directement, selon ce que vous convenez dans la conversation.'),
+      submit);
+    dlg.replaceChildren(form);
+    dlg.showModal();
+  }
+
+  const menuList = (menus || []).length ? menus.map(m =>
+    h('div', { class: 'menu-item' },
+      h('div', { class: 'between', style: 'align-items:flex-start' }, h('h3', null, m.nom), h('span', { class: 'price' }, euro(m.prix_personne), h('span', { class: 'muted small', style: 'font-family:var(--body);font-weight:400' }, '/pers.'))),
+      m.description ? h('p', { class: 'muted', style: 'white-space:pre-line' }, m.description) : null,
+      h('div', { class: 'muted small' }, 'Minimum ' + m.min_convives + ' personnes' + (m.allergenes ? ' · Allergènes : ' + m.allergenes : '')),
+      estMoi ? null : h('button', { class: 'btn primary', onclick: () => ouvrirCommande(m) }, 'Commander ce menu')))
+    : [h('div', { class: 'empty' }, 'Aucun menu pour le moment.')];
+
+  return h('div', { class: 'stack', style: 'gap:16px' },
+    backLink('#/'),
+    photoBox(t.photo_url, t.nom, 'cover'),
+    h('div', { class: 'stack', style: 'gap:6px' },
+      h('h1', null, t.nom),
+      h('div', { class: 'muted' }, [t.cuisine, t.ville].filter(Boolean).join(' · ')),
+      h('div', { class: 'row', style: 'flex-wrap:wrap;gap:8px' },
+        h('span', { class: 'badge b-ok' }, '✓ Traiteur vérifié'),
+        h('span', { class: 'badge b-neutre' }, 'Commander ' + t.delai_jours + ' jours avant'))),
+    t.description ? h('p', { style: 'white-space:pre-line' }, t.description) : null,
+    estMoi ? h('div', { class: 'note' }, 'C’est ta fiche publique, telle que les clients la voient. ', h('a', { href: '#/pro' }, 'La modifier')) : null,
+    h('h2', null, 'Menus'),
+    ...menuList);
+}
+
+// =====================================================================
+// PAGES : CONNEXION / INSCRIPTION / MOT DE PASSE
+// =====================================================================
+function pageConnexion(retour) {
+  const email = h('input', { type: 'email', required: true, autocomplete: 'email' });
+  const mdp = h('input', { type: 'password', required: true, autocomplete: 'current-password' });
+  const submit = h('button', { class: 'btn primary block', type: 'submit' }, 'Se connecter');
+  const form = h('form', {
+    class: 'card', onsubmit: async e => {
+      e.preventDefault(); busy(submit, true);
+      const { data, error } = await sb.auth.signInWithPassword({ email: email.value.trim(), password: mdp.value });
+      if (error) { busy(submit, false); return fail(error); }
+      state.session = data.session;
+      await loadUser();
+      busy(submit, false);
+      toast('Connecté !');
+      go(retour && retour.startsWith('#/') ? retour : (state.profile && state.profile.role === 'traiteur' ? '#/pro' : '#/'));
+    },
+  },
+    h('h1', null, 'Connexion'),
+    field('Email', email), field('Mot de passe', mdp), submit,
+    h('button', {
+      type: 'button', class: 'linkbtn', onclick: async () => {
+        if (!email.value.trim()) return toast('Écris d’abord ton email ci-dessus.');
+        const { error } = await sb.auth.resetPasswordForEmail(email.value.trim(), { redirectTo: BASE_URL });
+        if (error) return fail(error);
+        toast('Email envoyé : suis le lien pour choisir un nouveau mot de passe.');
+      },
+    }, 'Mot de passe oublié ?'),
+    h('p', { class: 'muted' }, 'Pas encore de compte ? ', h('a', { href: '#/inscription' }, 'Créer un compte')));
+  return form;
+}
+
+function pageInscription(roleInit) {
+  let role = roleInit === 'traiteur' ? 'traiteur' : 'client';
+  const nomLabel = h('span', { class: 'field-label' });
+  const nom = h('input', { type: 'text', required: true, maxlength: 120, autocomplete: 'name' });
+  const email = h('input', { type: 'email', required: true, autocomplete: 'email' });
+  const mdp = h('input', { type: 'password', required: true, minlength: 6, autocomplete: 'new-password' });
+  const info = h('div', { class: 'note' });
+  const essai = state.settings ? state.settings.jours_essai : 30;
+  const prix = state.settings ? state.settings.prix_mensuel : 20;
+  function maj() {
+    nomLabel.textContent = role === 'traiteur' ? 'Nom de ton activité' : 'Ton prénom et nom';
+    info.textContent = role === 'traiteur'
+      ? 'Essai gratuit de ' + essai + ' jours, puis ' + prix + ' € par mois. Aucune commission sur tes commandes : tes clients te paient directement.'
+      : 'Gratuit pour les clients. Tu paies le traiteur directement.';
+  }
+  const opt = (val, titre, sous) => h('label', null,
+    h('input', { type: 'radio', name: 'role', value: val, checked: role === val, onchange: () => { role = val; maj(); } }),
+    h('b', null, titre), h('span', { class: 'muted small' }, sous));
+  maj();
+  const submit = h('button', { class: 'btn primary block', type: 'submit' }, 'Créer mon compte');
+  return h('form', {
+    class: 'card', onsubmit: async e => {
+      e.preventDefault(); busy(submit, true);
+      const { data, error } = await sb.auth.signUp({
+        email: email.value.trim(), password: mdp.value,
+        options: { data: { role, nom: nom.value.trim() }, emailRedirectTo: BASE_URL },
+      });
+      if (error) { busy(submit, false); return fail(error); }
+      if (data.session) {
+        state.session = data.session; await loadUser(); busy(submit, false);
+        toast('Compte créé !'); go(role === 'traiteur' ? '#/pro' : '#/'); return;
+      }
+      busy(submit, false);
+      main.replaceChildren(h('div', { class: 'card' },
+        h('h1', null, 'Vérifie ta boîte mail'),
+        h('p', null, 'On t’a envoyé un lien à ', h('b', null, email.value.trim()), '. Clique dessus pour activer ton compte, puis reviens te connecter.'),
+        h('p', { class: 'muted small' }, 'Pas reçu ? Regarde dans les spams.'),
+        h('a', { class: 'btn ghost', href: '#/connexion' }, 'Aller à la connexion')));
+    },
+  },
+    h('h1', null, 'Créer un compte'),
+    h('div', { class: 'role-pick', role: 'radiogroup', 'aria-label': 'Je suis' },
+      opt('client', 'Je cherche un traiteur', 'Client'), opt('traiteur', 'Je suis traiteur', 'Professionnel')),
+    info,
+    h('label', { class: 'field' }, nomLabel, nom),
+    field('Email', email), field('Mot de passe', mdp, '6 caractères minimum'),
+    submit,
+    h('p', { class: 'muted small' }, 'En créant un compte, tu acceptes les conditions d’utilisation de Kawa.'),
+    h('p', { class: 'muted' }, 'Déjà un compte ? ', h('a', { href: '#/connexion' }, 'Se connecter')));
+}
+
+function pageNouveauMdp() {
+  if (!state.session) return h('div', { class: 'card' }, h('p', null, 'Ouvre le lien reçu par email pour changer ton mot de passe.'));
+  const mdp = h('input', { type: 'password', required: true, minlength: 6, autocomplete: 'new-password' });
+  const submit = h('button', { class: 'btn primary block', type: 'submit' }, 'Enregistrer');
+  return h('form', {
+    class: 'card', onsubmit: async e => {
+      e.preventDefault(); busy(submit, true);
+      const { error } = await sb.auth.updateUser({ password: mdp.value });
+      busy(submit, false);
+      if (error) return fail(error);
+      toast('Mot de passe modifié.'); go('#/');
+    },
+  }, h('h1', null, 'Nouveau mot de passe'), field('Nouveau mot de passe', mdp, '6 caractères minimum'), submit);
+}
+
+// =====================================================================
+// PAGES : COMMANDES
+// =====================================================================
+async function pageCommandes() {
+  if (!state.session) return needLogin();
+  const uid = state.session.user.id;
+  const pro = state.profile && state.profile.role === 'traiteur';
+  const { data, error } = await sb.from('commandes').select('*')
+    .eq(pro ? 'traiteur_id' : 'client_id', uid).order('created_at', { ascending: false }).limit(200);
+  if (error) throw error;
+  const cards = (data || []).map(c =>
+    h('a', { class: 'card', href: '#/commande/' + c.id, style: 'text-decoration:none;color:var(--ink)' },
+      h('div', { class: 'between' }, h('h3', null, c.menu_nom), badge(c.statut)),
+      h('div', { class: 'muted' }, (pro ? 'Client : ' + c.client_nom : c.traiteur_nom)),
+      h('div', { class: 'between small' }, h('span', null, dateFr(c.date_evenement) + ' · ' + c.convives + ' pers.'), h('b', null, euro(c.prix_personne * c.convives)))));
+  const enAttente = pro ? (data || []).filter(c => c.statut === 'en_attente').length : 0;
+  return h('div', { class: 'stack' },
+    h('h1', null, pro ? 'Commandes reçues' : 'Mes commandes'),
+    enAttente ? h('div', { class: 'note warn' }, enAttente + (enAttente > 1 ? ' demandes attendent' : ' demande attend') + ' ta réponse.') : null,
+    ...(cards.length ? cards : [h('div', { class: 'empty' }, pro ? 'Pas encore de commande. Partage ta fiche sur tes réseaux pour en recevoir !' : 'Tu n’as pas encore passé de commande.',
+      pro ? null : h('div', { style: 'margin-top:12px' }, h('a', { class: 'btn primary', href: '#/' }, 'Trouver un traiteur')))]));
+}
+
+async function pageCommande(id) {
+  if (!state.session) return needLogin();
+  const uid = state.session.user.id;
+  const [{ data: c0, error }, { data: msgs0 }] = await Promise.all([
+    sb.from('commandes').select('*').eq('id', id).maybeSingle(),
+    sb.from('messages').select('*').eq('commande_id', id).order('created_at').limit(500),
+  ]);
+  if (error) throw error;
+  if (!c0) return h('div', { class: 'stack' }, backLink('#/commandes'), h('div', { class: 'empty' }, 'Commande introuvable.'));
+  let c = c0;
+  const suisTraiteur = c.traiteur_id === uid;
+
+  const head = h('div', { class: 'stack' });
+  function drawHead() {
+    const actions = [];
+    const agir = async (statut, btn, confirmTxt) => {
+      if (confirmTxt && !confirm(confirmTxt)) return;
+      busy(btn, true);
+      const { error } = await sb.rpc('changer_statut', { p_id: c.id, p_statut: statut });
+      busy(btn, false);
+      if (error) return fail(error);
+      const { data } = await sb.from('commandes').select('*').eq('id', c.id).single();
+      if (data) { c = data; drawHead(); }
+    };
+    if (suisTraiteur && c.statut === 'en_attente') {
+      const ok = h('button', { class: 'btn primary', onclick: e => agir('acceptee', e.currentTarget) }, 'Accepter');
+      const no = h('button', { class: 'btn ghost', onclick: e => agir('refusee', e.currentTarget, 'Refuser cette commande ?') }, 'Refuser');
+      actions.push(h('div', { class: 'grid2' }, no, ok));
+    }
+    if (suisTraiteur && c.statut === 'acceptee') actions.push(h('button', { class: 'btn ghost', onclick: e => agir('terminee', e.currentTarget, 'Marquer la prestation comme terminée ?') }, 'Prestation terminée'));
+    if (!suisTraiteur && ['en_attente', 'acceptee'].includes(c.statut)) actions.push(h('button', { class: 'btn danger', onclick: e => agir('annulee', e.currentTarget, 'Annuler cette commande ?') }, 'Annuler la commande'));
+
+    let paiement = null;
+    if (c.statut === 'acceptee' || c.statut === 'terminee') {
+      paiement = suisTraiteur
+        ? h('div', { class: 'note good' }, 'Commande acceptée. Le client te paie directement : précise-lui le moyen et l’acompte éventuel dans la conversation.')
+        : h('div', { class: 'note good' }, h('b', null, 'Commande acceptée ! '), 'Tu paies le traiteur directement. ',
+          c.paiement_infos ? ['Moyens de paiement indiqués : ', h('span', { style: 'white-space:pre-line' }, c.paiement_infos)] : 'Il t’indiquera comment payer dans la conversation.');
+    } else if (c.statut === 'en_attente') {
+      paiement = h('div', { class: 'note warn' }, suisTraiteur ? 'Réponds vite : les clients choisissent souvent le premier traiteur qui répond.' : 'En attente de la réponse du traiteur. Tu peux lui écrire ci-dessous.');
+    }
+
+    head.replaceChildren(
+      h('div', { class: 'card' },
+        h('div', { class: 'between' }, h('h2', null, c.menu_nom), badge(c.statut)),
+        h('div', { class: 'muted' }, suisTraiteur ? 'Client : ' + c.client_nom : 'Traiteur : ' + c.traiteur_nom),
+        h('div', { class: 'stack small', style: 'gap:6px' },
+          h('div', { class: 'between' }, h('span', { class: 'muted' }, 'Date'), h('b', null, dateFr(c.date_evenement) + (c.heure ? ' · ' + c.heure : ''))),
+          h('div', { class: 'between' }, h('span', { class: 'muted' }, 'Convives'), h('b', null, c.convives + ' × ' + euro(c.prix_personne))),
+          h('div', { class: 'between', style: 'align-items:flex-start' }, h('span', { class: 'muted' }, 'Adresse'), h('b', { style: 'text-align:right' }, c.adresse || '—')),
+          h('div', { class: 'between' }, h('span', { class: 'muted' }, 'Total estimé'), h('span', { class: 'price' }, euro(c.prix_personne * c.convives)))),
+        c.note ? h('p', { class: 'small', style: 'white-space:pre-line;border-top:1px solid var(--line-soft);padding-top:10px' }, h('b', null, 'Message : '), c.note) : null),
+      paiement, ...actions);
+  }
+  drawHead();
+
+  const box = h('div', { class: 'msgs', 'aria-live': 'polite' });
+  const vus = new Set();
+  function addMsg(m) {
+    if (vus.has(m.id)) return; vus.add(m.id);
+    const moi = m.auteur_id === uid;
+    const qui = moi ? 'Toi' : (m.auteur_id === c.client_id ? c.client_nom : c.traiteur_nom);
+    box.append(h('div', { class: 'bubble ' + (moi ? 'me' : 'them') }, h('span', { class: 'who' }, qui), m.texte));
+    box.scrollTop = box.scrollHeight;
+  }
+  (msgs0 || []).forEach(addMsg);
+  const vide = h('div', { class: 'muted small', style: 'text-align:center' }, 'Aucun message pour l’instant.');
+  if (!(msgs0 || []).length) box.append(vide);
+
+  const input = h('textarea', { rows: 1, maxlength: 2000, placeholder: 'Écrire un message…', 'aria-label': 'Ton message' });
+  const send = h('button', { class: 'btn primary', type: 'submit' }, 'Envoyer');
+  const form = h('form', {
+    class: 'sendrow', onsubmit: async e => {
+      e.preventDefault();
+      const texte = input.value.trim(); if (!texte) return;
+      busy(send, true, '…');
+      const { data, error } = await sb.from('messages').insert({ commande_id: c.id, auteur_id: uid, texte }).select('*').single();
+      busy(send, false);
+      if (error) return fail(error);
+      vide.remove(); input.value = ''; addMsg(data);
+    },
+  }, input, send);
+
+  const ch = sb.channel('commande-' + c.id)
+    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: 'commande_id=eq.' + c.id }, p => { vide.remove(); addMsg(p.new); })
+    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'commandes', filter: 'id=eq.' + c.id }, p => { c = { ...c, ...p.new }; drawHead(); })
+    .subscribe();
+  cleanup.push(() => sb.removeChannel(ch));
+
+  return h('div', { class: 'stack' },
+    backLink('#/commandes', 'Commandes'),
+    head,
+    h('div', { class: 'card' }, h('h3', null, 'Conversation'), box, form));
+}
+
+// =====================================================================
+// PAGE : ESPACE PRO (traiteur)
+// =====================================================================
+async function pagePro() {
+  if (!state.session) return needLogin();
+  if (!state.profile || state.profile.role !== 'traiteur') {
+    return h('div', { class: 'card' }, h('h2', null, 'Espace réservé aux traiteurs'),
+      h('p', { class: 'muted' }, 'Ton compte est un compte client. Pour proposer tes menus, crée un compte traiteur avec une autre adresse email.'));
+  }
+  const uid = state.session.user.id;
+  const [{ data: t }, { data: menus }, { count: nbAttente }] = await Promise.all([
+    sb.from('traiteurs').select('*').eq('id', uid).single(),
+    sb.from('menus').select('*').eq('traiteur_id', uid).order('created_at'),
+    sb.from('commandes').select('id', { count: 'exact', head: true }).eq('traiteur_id', uid).eq('statut', 'en_attente'),
+  ]);
+  state.traiteur = t;
+  const ab = abonnement(t);
+  const s = state.settings || {};
+
+  // --- abonnement ---
+  const lienOk = typeof s.stripe_lien === 'string' && s.stripe_lien.startsWith('https://');
+  const lien = lienOk ? s.stripe_lien + (s.stripe_lien.includes('?') ? '&' : '?') + 'client_reference_id=' + encodeURIComponent(uid) + '&prefilled_email=' + encodeURIComponent(state.profile.email) : null;
+  const statutCls = !t.approuve ? 'warn' : ab.type === 'expire' ? 'bad' : 'good';
+  const statutTxt = !t.approuve
+    ? 'Ta fiche est en cours de validation par Kawa. Complète ta fiche et ajoute au moins un menu : elle sera visible dès sa validation.'
+    : ab.type === 'expire' ? 'Ton abonnement a expiré : ta fiche n’est plus visible par les clients. Règle ton abonnement pour la réactiver.'
+    : 'Ta fiche est en ligne. ' + ab.texte + '.';
+  const carteAbo = h('div', { class: 'card' },
+    h('div', { class: 'between' }, h('h2', null, 'Mon abonnement'), h('span', { class: 'badge ' + (ab.type === 'expire' ? 'b-no' : ab.type === 'essai' ? 'b-attente' : 'b-ok') }, ab.type === 'essai' ? 'Essai gratuit' : ab.type === 'paye' ? 'Actif' : 'Expiré')),
+    h('div', { class: 'note ' + statutCls }, statutTxt),
+    h('p', { class: 'muted small' }, (!t.approuve && ab.fin ? (ab.type === 'essai' ? 'Fin de l’essai : ' : 'Payé jusqu’au ') + dateCourte(ab.fin) + '. ' : '') + 'Abonnement : ' + (s.prix_mensuel || 20) + ' € par mois, sans commission sur tes commandes.'),
+    lien ? h('a', { class: 'btn primary', href: lien, target: '_blank', rel: 'noopener' }, 'Payer mon abonnement (' + (s.prix_mensuel || 20) + ' €/mois)') : h('p', { class: 'muted small' }, 'Le paiement en ligne de l’abonnement sera bientôt disponible.'),
+    lien ? h('p', { class: 'muted small' }, 'Après ton paiement, ton abonnement est activé sous 24 h.') : null);
+
+  // --- fiche ---
+  const f = {
+    nom: h('input', { type: 'text', required: true, maxlength: 120, value: t.nom }),
+    cuisine: h('input', { type: 'text', maxlength: 60, value: t.cuisine, placeholder: 'Ex. : Sénégalais, Libanais, Antillais…' }),
+    ville: h('input', { type: 'text', maxlength: 80, value: t.ville, placeholder: 'Ex. : Saint-Denis' }),
+    description: h('textarea', { maxlength: 1500, value: t.description, placeholder: 'Présente ta cuisine, ton expérience, ce qui est inclus (livraison, service, vaisselle…)' }),
+    delai: h('input', { type: 'number', min: 0, max: 60, value: t.delai_jours, inputmode: 'numeric' }),
+    paiement: h('textarea', { maxlength: 500, value: t.paiement_infos, placeholder: 'Ex. : virement, espèces, Lydia. Acompte de 30 % à la réservation.' }),
+  };
+  const photoPrev = photoBox(t.photo_url, t.nom, 'cover');
+  let photoUrl = t.photo_url;
+  const photoInput = h('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', class: 'sr', id: 'photo-file' });
+  photoInput.addEventListener('change', async () => {
+    const file = photoInput.files[0]; if (!file) return;
+    if (file.size > 5 * 1024 * 1024) return toast('Photo trop lourde (5 Mo maximum).');
+    const ext = (file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z]/g, '') || 'jpg';
+    const path = uid + '/couverture-' + Date.now() + '.' + ext;
+    toast('Envoi de la photo…');
+    const { error } = await sb.storage.from('photos').upload(path, file, { contentType: file.type, upsert: true });
+    if (error) return fail(error, 'La photo n’a pas pu être envoyée.');
+    photoUrl = sb.storage.from('photos').getPublicUrl(path).data.publicUrl;
+    photoPrev.replaceChildren(h('img', { src: photoUrl, alt: '' }));
+    toast('Photo prête : pense à enregistrer.');
+  });
+  const save = h('button', { class: 'btn primary block', type: 'submit' }, 'Enregistrer ma fiche');
+  const carteFiche = h('form', {
+    class: 'card', onsubmit: async e => {
+      e.preventDefault(); busy(save, true);
+      const { error } = await sb.from('traiteurs').update({
+        nom: f.nom.value.trim(), cuisine: f.cuisine.value.trim(), ville: f.ville.value.trim(), description: f.description.value.trim(),
+        delai_jours: Math.max(0, Math.min(60, Number(f.delai.value) || 0)), paiement_infos: f.paiement.value.trim(), photo_url: photoUrl,
+      }).eq('id', uid);
+      busy(save, false);
+      if (error) return fail(error);
+      toast('Fiche enregistrée.');
+    },
+  },
+    h('div', { class: 'between' }, h('h2', null, 'Ma fiche'), h('a', { href: '#/t/' + uid, class: 'small' }, 'Voir ma fiche')),
+    photoPrev,
+    h('label', { for: 'photo-file', class: 'btn ghost sm', style: 'align-self:flex-start' }, 'Changer la photo'), photoInput,
+    field('Nom de l’activité', f.nom),
+    h('div', { class: 'grid2' }, field('Cuisine', f.cuisine), field('Ville', f.ville)),
+    field('Présentation', f.description),
+    field('Délai minimum de commande (jours)', f.delai),
+    field('Comment te payer', f.paiement, 'Montré au client quand tu acceptes sa commande. Ne mets pas ton IBAN ici : donne-le dans la conversation.'),
+    save);
+
+  // --- menus ---
+  const dlg = h('dialog', { 'aria-label': 'Menu' });
+  document.body.append(dlg);
+  cleanup.push(() => dlg.remove());
+  function editerMenu(m) {
+    const v = m || { nom: '', description: '', prix_personne: '', min_convives: 10, allergenes: '', actif: true };
+    const fm = {
+      nom: h('input', { type: 'text', required: true, maxlength: 120, value: v.nom, placeholder: 'Ex. : Buffet mariage' }),
+      description: h('textarea', { maxlength: 1500, value: v.description, placeholder: 'Plats inclus, quantités, boissons, service…' }),
+      prix: h('input', { type: 'number', required: true, min: 0, step: '0.5', value: v.prix_personne, inputmode: 'decimal' }),
+      min: h('input', { type: 'number', required: true, min: 1, max: 2000, value: v.min_convives, inputmode: 'numeric' }),
+      allergenes: h('input', { type: 'text', maxlength: 200, value: v.allergenes, placeholder: 'Ex. : gluten, arachide, poisson' }),
+      actif: h('input', { type: 'checkbox', checked: v.actif }),
+    };
+    const ok = h('button', { class: 'btn primary block', type: 'submit' }, m ? 'Enregistrer' : 'Ajouter le menu');
+    dlg.replaceChildren(h('form', {
+      onsubmit: async e => {
+        e.preventDefault(); busy(ok, true);
+        const row = { nom: fm.nom.value.trim(), description: fm.description.value.trim(), prix_personne: Number(fm.prix.value), min_convives: Number(fm.min.value), allergenes: fm.allergenes.value.trim(), actif: fm.actif.checked };
+        const { error } = m ? await sb.from('menus').update(row).eq('id', m.id) : await sb.from('menus').insert({ ...row, traiteur_id: uid });
+        busy(ok, false);
+        if (error) return fail(error);
+        dlg.close(); toast('Menu enregistré.'); render();
+      },
+    },
+      h('div', { class: 'between' }, h('h2', null, m ? 'Modifier le menu' : 'Nouveau menu'), h('button', { type: 'button', class: 'btn ghost sm', onclick: () => dlg.close() }, 'Fermer')),
+      field('Nom du menu', fm.nom), field('Description', fm.description),
+      h('div', { class: 'grid2' }, field('Prix par personne (€)', fm.prix), field('Minimum de personnes', fm.min)),
+      field('Allergènes', fm.allergenes, 'Obligatoire : indique les allergènes présents.'),
+      h('label', { class: 'row', style: 'min-height:44px' }, fm.actif, 'Visible par les clients'),
+      ok));
+    dlg.showModal();
+  }
+  const listeMenus = (menus || []).map(m => h('div', { class: 'menu-item' },
+    h('div', { class: 'between' }, h('h3', null, m.nom), h('span', { class: 'price' }, euro(m.prix_personne))),
+    h('div', { class: 'muted small' }, 'Min. ' + m.min_convives + ' pers.' + (m.actif ? '' : ' · Masqué')),
+    h('div', { class: 'row' },
+      h('button', { class: 'btn ghost sm', onclick: () => editerMenu(m) }, 'Modifier'),
+      h('button', {
+        class: 'btn danger sm', onclick: async () => {
+          if (!confirm('Supprimer le menu « ' + m.nom + ' » ?')) return;
+          const { error } = await sb.from('menus').delete().eq('id', m.id);
+          if (error) return fail(error);
+          toast('Menu supprimé.'); render();
+        },
+      }, 'Supprimer'))));
+  const carteMenus = h('div', { class: 'card' },
+    h('div', { class: 'between' }, h('h2', null, 'Mes menus'), h('button', { class: 'btn primary sm', onclick: () => editerMenu(null) }, '+ Ajouter')),
+    ...(listeMenus.length ? listeMenus : [h('p', { class: 'muted' }, 'Ajoute ton premier menu pour apparaître dans le catalogue.')]));
+
+  return h('div', { class: 'stack' },
+    h('h1', null, 'Espace pro'),
+    nbAttente ? h('a', { class: 'note warn', href: '#/commandes', style: 'text-decoration:none' }, h('b', null, nbAttente + (nbAttente > 1 ? ' nouvelles demandes' : ' nouvelle demande')), ' : réponds-y maintenant →') : null,
+    carteAbo, carteMenus, carteFiche);
+}
+
+// =====================================================================
+// PAGE : ADMIN (toi)
+// =====================================================================
+async function pageAdmin() {
+  if (!state.session) return needLogin();
+  if (!state.profile || !state.profile.is_admin) return h('div', { class: 'empty' }, 'Page réservée à l’administrateur.');
+  const [{ data: ts, error }, { data: profs }, { count: nbCmd }, { data: menus }] = await Promise.all([
+    sb.from('traiteurs').select('*').order('created_at', { ascending: false }),
+    sb.from('profiles').select('id,email,role,created_at'),
+    sb.from('commandes').select('id', { count: 'exact', head: true }),
+    sb.from('menus').select('traiteur_id'),
+  ]);
+  if (error) throw error;
+  const emails = Object.fromEntries((profs || []).map(p => [p.id, p.email]));
+  const nbMenus = {}; (menus || []).forEach(m => { nbMenus[m.traiteur_id] = (nbMenus[m.traiteur_id] || 0) + 1; });
+  const s = state.settings || {};
+  const actifs = (ts || []).filter(visible).length;
+  const payants = (ts || []).filter(t => abonnement(t).type === 'paye').length;
+
+  const fs = {
+    lien: h('input', { type: 'url', value: s.stripe_lien || '', placeholder: 'https://buy.stripe.com/…' }),
+    prix: h('input', { type: 'number', min: 0, value: s.prix_mensuel ?? 20 }),
+    essai: h('input', { type: 'number', min: 0, max: 365, value: s.jours_essai ?? 30 }),
+  };
+  const saveS = h('button', { class: 'btn primary', type: 'submit' }, 'Enregistrer les réglages');
+  const reglages = h('form', {
+    class: 'card', onsubmit: async e => {
+      e.preventDefault();
+      const lien = fs.lien.value.trim();
+      if (lien && !lien.startsWith('https://')) return toast('Le lien doit commencer par https://');
+      busy(saveS, true);
+      const { error } = await sb.from('settings').update({ stripe_lien: lien, prix_mensuel: Number(fs.prix.value) || 0, jours_essai: Number(fs.essai.value) || 0 }).eq('id', 1);
+      busy(saveS, false);
+      if (error) return fail(error);
+      await loadSettings(); toast('Réglages enregistrés.');
+    },
+  },
+    h('h2', null, 'Réglages'),
+    field('Lien de paiement Stripe de l’abonnement', fs.lien, 'Crée un « Payment Link » d’abonnement mensuel sur Stripe et colle-le ici.'),
+    h('div', { class: 'grid2' }, field('Prix (€/mois)', fs.prix), field('Essai gratuit (jours)', fs.essai)),
+    h('p', { class: 'muted small' }, 'Le prix sert à l’affichage : le vrai montant est celui de ton lien Stripe. La durée d’essai s’applique aux nouveaux inscrits.'),
+    saveS);
+
+  async function majTraiteur(t, approuve, fin, btn) {
+    busy(btn, true);
+    const { error } = await sb.rpc('admin_traiteur', { p_id: t.id, p_approuve: approuve, p_abonnement_fin: fin });
+    busy(btn, false);
+    if (error) return fail(error);
+    toast('Mis à jour.'); render();
+  }
+  const cartes = (ts || []).map(t => {
+    const ab = abonnement(t);
+    const plusUnMois = () => {
+      const base = new Date(Math.max(Date.now(), t.abonnement_fin ? new Date(t.abonnement_fin).getTime() : 0));
+      base.setMonth(base.getMonth() + 1);
+      return base.toISOString();
+    };
+    return h('div', { class: 'card' },
+      h('div', { class: 'between' }, h('h3', null, t.nom),
+        h('span', { class: 'badge ' + (!t.approuve ? 'b-attente' : visible(t) ? 'b-ok' : 'b-no') }, !t.approuve ? 'À valider' : visible(t) ? 'En ligne' : 'Expiré')),
+      h('div', { class: 'muted small' }, emails[t.id] || ''),
+      h('div', { class: 'muted small' }, [t.cuisine, t.ville].filter(Boolean).join(' · ') + ' · ' + (nbMenus[t.id] || 0) + ' menu(s) · inscrit le ' + dateCourte(t.created_at)),
+      h('div', { class: 'small' }, ab.texte),
+      h('div', { class: 'row', style: 'flex-wrap:wrap' },
+        t.approuve
+          ? h('button', { class: 'btn ghost sm', onclick: e => majTraiteur(t, false, t.abonnement_fin, e.currentTarget) }, 'Retirer la validation')
+          : h('button', { class: 'btn primary sm', onclick: e => majTraiteur(t, true, t.abonnement_fin, e.currentTarget) }, 'Valider'),
+        h('button', { class: 'btn ghost sm', onclick: e => { if (confirm('Enregistrer un mois payé pour ' + t.nom + ' ?')) majTraiteur(t, t.approuve, plusUnMois(), e.currentTarget); } }, '+ 1 mois payé'),
+        t.abonnement_fin ? h('button', { class: 'btn danger sm', onclick: e => { if (confirm('Annuler l’abonnement payé de ' + t.nom + ' ?')) majTraiteur(t, t.approuve, null, e.currentTarget); } }, 'Annuler l’abonnement') : null,
+        h('a', { class: 'btn ghost sm', href: '#/t/' + t.id }, 'Voir la fiche')));
+  });
+
+  return h('div', { class: 'stack' },
+    h('h1', null, 'Administration'),
+    h('div', { class: 'grid2' },
+      h('div', { class: 'card', style: 'gap:2px' }, h('span', { class: 'muted small' }, 'Traiteurs en ligne'), h('span', { class: 'stat' }, actifs + ' / ' + (ts || []).length)),
+      h('div', { class: 'card', style: 'gap:2px' }, h('span', { class: 'muted small' }, 'Abonnements payés'), h('span', { class: 'stat' }, payants)),
+      h('div', { class: 'card', style: 'gap:2px' }, h('span', { class: 'muted small' }, 'Revenu mensuel estimé'), h('span', { class: 'stat' }, euro(payants * (s.prix_mensuel || 0)))),
+      h('div', { class: 'card', style: 'gap:2px' }, h('span', { class: 'muted small' }, 'Commandes au total'), h('span', { class: 'stat' }, nbCmd || 0))),
+    h('h2', null, 'Traiteurs'),
+    h('p', { class: 'muted small' }, 'Quand Stripe t’envoie un paiement, retrouve le traiteur grâce à son email et clique sur « + 1 mois payé ».'),
+    ...(cartes.length ? cartes : [h('div', { class: 'empty' }, 'Aucun traiteur inscrit pour l’instant.')]),
+    reglages);
+}
+
+// =====================================================================
+// PAGE : COMPTE
+// =====================================================================
+async function pageCompte() {
+  if (!state.session) {
+    return h('div', { class: 'stack' },
+      h('h1', null, 'Bienvenue sur Kawa'),
+      h('a', { class: 'btn primary', href: '#/connexion' }, 'Se connecter'),
+      h('a', { class: 'btn ghost', href: '#/inscription' }, 'Créer un compte client'),
+      h('div', { class: 'card' }, h('h3', null, 'Tu es traiteur ?'),
+        h('p', { class: 'muted' }, 'Présente tes menus à de nouveaux clients. ' + ((state.settings && state.settings.jours_essai) || 30) + ' jours gratuits, puis ' + ((state.settings && state.settings.prix_mensuel) || 20) + ' € par mois, sans commission.'),
+        h('a', { class: 'btn primary', href: '#/inscription?role=traiteur' }, 'Inscrire mon activité')));
+  }
+  const p = state.profile || { nom: '', email: state.session.user.email, role: 'client' };
+  const nom = h('input', { type: 'text', maxlength: 120, value: p.nom, required: true });
+  const save = h('button', { class: 'btn ghost', type: 'submit' }, 'Enregistrer');
+  return h('div', { class: 'stack' },
+    h('h1', null, 'Mon compte'),
+    h('form', {
+      class: 'card', onsubmit: async e => {
+        e.preventDefault(); busy(save, true);
+        const { error } = await sb.from('profiles').update({ nom: nom.value.trim() }).eq('id', state.session.user.id);
+        busy(save, false);
+        if (error) return fail(error);
+        await loadUser(); drawNav('compte'); toast('Enregistré.');
+      },
+    },
+      field(p.role === 'traiteur' ? 'Ton nom (contact)' : 'Ton nom', nom, p.role === 'client' ? 'Visible par les traiteurs à qui tu commandes.' : 'Le nom affiché aux clients se règle dans « Ma fiche ».'),
+      h('p', { class: 'muted small' }, 'Email : ' + (p.email || state.session.user.email) + ' · Compte ' + (p.role === 'traiteur' ? 'traiteur' : 'client')),
+      save),
+    p.role === 'traiteur' ? h('a', { class: 'btn ghost', href: '#/pro' }, 'Espace pro') : null,
+    p.is_admin ? h('a', { class: 'btn primary', href: '#/admin' }, 'Administration') : null,
+    h('button', { class: 'btn danger', onclick: async () => { await sb.auth.signOut(); toast('Déconnecté.'); go('#/'); } }, 'Se déconnecter'));
+}
+
+// =====================================================================
+// DÉMARRAGE
+// =====================================================================
+async function start() {
+  if (!configured) {
+    drawNav('');
+    main.replaceChildren(h('div', { class: 'card' },
+      h('h1', null, 'Presque prêt !'),
+      h('p', null, 'Il reste à brancher la base de données : ouvre le fichier index.html et colle ton Project URL et ta clé anon (étape 3 du guide).')));
+    return;
+  }
+  // Lien reçu par email (confirmation, mot de passe oublié) : jetons dans l'adresse
+  const hashInitial = location.hash;
+  const lienErreur = /error_description=([^&]+)/.exec(hashInitial);
+  const lienInscription = /type=signup/.test(hashInitial);
+  let recuperation = /type=recovery/.test(hashInitial);
+  let pret = false;
+  // Ne jamais attendre un appel Supabase directement dans ce rappel (risque de blocage) : on décale avec setTimeout.
+  sb.auth.onAuthStateChange((event, session) => {
+    const avant = state.session && state.session.user.id;
+    state.session = session;
+    if (event === 'PASSWORD_RECOVERY') recuperation = true;
+    if (!pret) return;
+    setTimeout(async () => {
+      if (event === 'PASSWORD_RECOVERY') { await loadUser(); go('#/mdp'); return; }
+      if ((session && session.user.id) !== avant) { await loadUser(); render(); }
+    }, 0);
+  });
+  const { data } = await sb.auth.getSession();
+  state.session = data.session;
+  await Promise.all([loadUser(), loadSettings()]);
+  window.addEventListener('hashchange', render);
+  pret = true;
+  if (/access_token|error_description|type=/.test(location.hash)) history.replaceState(null, '', BASE_URL);
+  if (lienErreur) toast('Ce lien a expiré ou a déjà servi. Demande-en un nouveau.');
+  if (recuperation && state.session) { go('#/mdp'); return; }
+  if (lienInscription && state.session) { toast('Email confirmé, bienvenue !'); go(state.profile && state.profile.role === 'traiteur' ? '#/pro' : '#/'); return; }
+  render();
+}
+start();
+</script>
+</body>
+</html>
